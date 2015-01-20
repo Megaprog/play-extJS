@@ -14,28 +14,24 @@ import scala.concurrent.Future
 class GoodsService {
 
   def add(goods: Goods): Future[Option[Goods]] = {
-    Future {
-      DB.withTransaction { implicit connection =>
-        if (checkNotExists(goods)) {
+    checkNotExists(goods).flatMap {
+      case true => Future {
+        DB.withTransaction { implicit connection =>
           SQL"INSERT INTO goods(name, price) VALUES (${goods.name}, ${goods.price})".executeInsert[Option[Long]]().map(id => goods.copy(id = id))
         }
-        else {
-          None
-        }
       }
+      case false => Future.successful(None)
     }
   }
 
   def update(goods: Goods): Future[Boolean] = {
-    Future {
-      DB.withTransaction { implicit connection =>
-        if (checkNotExists(goods)) {
+    checkNotExists(goods).flatMap {
+      case true => Future {
+        DB.withTransaction { implicit connection =>
           SQL"UPDATE goods SET name = ${goods.name}, price = ${goods.price} WHERE id = ${goods.id}".executeUpdate() > 0
         }
-        else {
-          false
-        }
       }
+      case false => Future.successful(false)
     }
   }
 
@@ -69,8 +65,12 @@ class GoodsService {
     }
   }
 
-  protected def checkNotExists(goods: Goods)(implicit connection: Connection): Boolean = {
-    SQL"SELECT count(*) FROM goods g WHERE g.name = ${goods.name} and g.price = ${goods.price}".as(SqlParser.scalar[Long].single) == 0
+  protected def checkNotExists(goods: Goods): Future[Boolean] = {
+    Future {
+      DB.withConnection { implicit connection =>
+        SQL"SELECT count(*) FROM goods g WHERE g.name = ${goods.name} and g.price = ${goods.price}".as(SqlParser.scalar[Long].single) == 0
+      }
+    }
   }
 
   protected def findByGoods(name: String, price: Long)(implicit connection: Connection): List[Goods] = {
