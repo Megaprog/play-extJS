@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS "goods"
+(
+    "id" BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+    "name" VARCHAR(255),
+    "price" BIGINT
+);

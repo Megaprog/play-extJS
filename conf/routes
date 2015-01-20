@@ -1,0 +1,7 @@
+GET         /goods        controllers.Application.search(search: Option[String])
+POST        /goods        controllers.Application.add
+DELETE      /goods/:id    controllers.Application.delete(id: Long)
+PUT         /goods/:id    controllers.Application.update(id: Long)
+
+GET         /             controllers.Assets.at(path = "/public", file = "index.html")
+GET         /*file        controllers.Assets.at(path = "/public", file)
